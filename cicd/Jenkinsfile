@@ -1,0 +1,37 @@
+pipeline {
+  agent {
+        label 'docker'
+    }
+  stages {
+    stage('Docker Build') {
+      agent any
+      steps {
+        sh 'docker build . -t koronet-web:latest'
+      }
+    }
+    stage('Run test') {
+      agent any
+      steps {
+        sh 'docker compose up -d'
+        sh 'curl -i localhost:8000/'
+      }
+    }
+    stage('Push to Docker Hub') {
+      agent any
+      steps {
+        sh 'docker login registry-1.docker.io'
+        sh 'docker tag koronet-web:latest koronet/koronet-web:latest'
+        sh 'docker push koronet/koronet-web:latest'
+      }
+    }
+    stage('Deploy to Kubernetes') {
+      agent any
+      steps {
+        sh 'kubectl create deployment koronet-web --image=koronet/koronet-web:latest'
+      }
+    //   steps {
+    //     sh 'kubectl apply -f koronet-web-service.yaml'
+    //   }
+    }
+  }
+}

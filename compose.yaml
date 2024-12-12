@@ -1,0 +1,24 @@
+services:
+  redis:
+    image: redislabs/redismod
+    networks:
+      - test_internal
+    ports:
+      - '6379:6379'
+  web:
+    build:
+      context: .
+      target: koronet-web
+    # flask requires SIGINT to stop gracefully
+    # (default stop signal from Compose is SIGTERM)
+    stop_signal: SIGINT
+    networks:
+      - test_internal
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+networks:
+  test_internal:
